@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::Day;
 
 pub struct Day1 {
@@ -21,7 +23,17 @@ impl Day for Day1 {
     }
 
     fn part2(&self) -> String {
-        "".to_string()
+        let mut count = HashMap::new();
+
+        self.rhs
+            .iter()
+            .for_each(|b| *count.entry(b).or_insert(0) += 1);
+
+        self.lhs
+            .iter()
+            .map(|a| a * count.get(a).unwrap_or(&0))
+            .sum::<i32>()
+            .to_string()
     }
 }
 
@@ -30,7 +42,7 @@ fn parse_input(input: &str) -> (Vec<i32>, Vec<i32>) {
     let mut rhs = vec![];
 
     input.lines().for_each(|line| {
-        let mut parts: Vec<_> = line.split_whitespace().collect();
+        let parts: Vec<_> = line.split_whitespace().collect();
         lhs.push(parts[0].parse().unwrap());
         rhs.push(parts[1].parse().unwrap());
     });
