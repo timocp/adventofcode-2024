@@ -34,6 +34,7 @@ fn run(n: Int) -> Nil {
   io.println(case n {
     1 -> day1.part2(input) |> int.to_string
     2 -> day2.part2(input) |> int.to_string
+    3 -> day3.part2(input) |> int.to_string
     _ -> "(not implemented)"
   })
 }
