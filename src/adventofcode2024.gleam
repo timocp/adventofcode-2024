@@ -6,6 +6,7 @@ import argv
 import simplifile
 
 import day1
+import day2
 
 pub fn main() {
   case argv.load().arguments {
@@ -14,7 +15,7 @@ pub fn main() {
         Ok(n) -> run(n)
         Error(_) -> io.println("Invalid day: " <> arg)
       }
-    _ -> list.range(1, 1) |> list.each(fn(n) { run(n) })
+    _ -> list.range(1, 2) |> list.each(fn(n) { run(n) })
   }
 }
 
@@ -24,6 +25,7 @@ fn run(n: Int) -> Nil {
   io.print(output("Part 1: "))
   io.println(case n {
     1 -> day1.part1(input) |> int.to_string
+    2 -> day2.part1(input) |> int.to_string
     _ -> "(not implemented)"
   })
   io.print(output("Part 2: "))
