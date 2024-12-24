@@ -13,6 +13,8 @@ fn run(n: Int) -> Nil {
   let input = read_input(n)
   io.print("Day " <> int.to_string(n) <> " Part 1: ")
   io.println(int.to_string(day1.part1(input)))
+  io.print("Day " <> int.to_string(n) <> " Part 2: ")
+  io.println(int.to_string(day1.part2(input)))
 }
 
 fn read_input(n: Int) -> String {
