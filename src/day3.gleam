@@ -13,7 +13,7 @@ pub fn part1(input: String) -> Int {
       _ -> 0
     }
   })
-  |> list.fold(0, fn(acc, v) { acc + v })
+  |> int.sum
 }
 
 pub fn part2(input: String) -> Int {

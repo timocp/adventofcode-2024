@@ -15,7 +15,7 @@ pub fn part2(input: String) -> Int {
   let left_count = bag.from_list(left)
   right
   |> list.map(fn(r) { r * bag.copies(left_count, r) })
-  |> list.fold(0, fn(acc, r) { acc + r })
+  |> int.sum
 }
 
 fn parse_input(input: String) -> #(List(Int), List(Int)) {
