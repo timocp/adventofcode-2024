@@ -18,3 +18,7 @@ const example1 = "7 6 4 2 1
 pub fn part1_test() {
   day2.part1(example1) |> should.equal(2)
 }
+
+pub fn part2_test() {
+  day2.part2(example1) |> should.equal(4)
+}
