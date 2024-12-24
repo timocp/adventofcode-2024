@@ -1,20 +1,36 @@
 import gleam/int
 import gleam/io
+import gleam/list
 
+import argv
 import simplifile
 
 import day1
 
 pub fn main() {
-  run(1)
+  case argv.load().arguments {
+    [arg] ->
+      case int.parse(arg) {
+        Ok(n) -> run(n)
+        Error(_) -> io.println("Invalid day: " <> arg)
+      }
+    _ -> list.range(1, 1) |> list.each(fn(n) { run(n) })
+  }
 }
 
 fn run(n: Int) -> Nil {
   let input = read_input(n)
-  io.print("Day " <> int.to_string(n) <> " Part 1: ")
-  io.println(int.to_string(day1.part1(input)))
-  io.print("Day " <> int.to_string(n) <> " Part 2: ")
-  io.println(int.to_string(day1.part2(input)))
+  let output = fn(s) { "Day " <> int.to_string(n) <> " " <> s }
+  io.print(output("Part 1: "))
+  io.println(case n {
+    1 -> day1.part1(input) |> int.to_string
+    _ -> "(not implemented)"
+  })
+  io.print(output("Part 2: "))
+  io.println(case n {
+    1 -> day1.part2(input) |> int.to_string
+    _ -> "(not implemented)"
+  })
 }
 
 fn read_input(n: Int) -> String {
