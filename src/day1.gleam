@@ -4,6 +4,8 @@ import gleam/string
 
 import tote/bag
 
+import parse
+
 pub fn part1(input: String) -> Int {
   let #(left, right) = parse_input(input)
   list.zip(left, right)
@@ -20,9 +22,7 @@ pub fn part2(input: String) -> Int {
 
 fn parse_input(input: String) -> #(List(Int), List(Int)) {
   let data =
-    input
-    |> string.split("\n")
-    |> list.filter(fn(line) { line != "" })
+    parse.lines(input)
     |> list.map(fn(line) {
       line |> string.split(" ") |> list.filter_map(fn(str) { int.parse(str) })
     })

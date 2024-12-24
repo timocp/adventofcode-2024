@@ -2,6 +2,8 @@ import gleam/int
 import gleam/list
 import gleam/string
 
+import parse
+
 pub fn part1(input: String) -> Int {
   input |> parse_input |> list.count(safe)
 }
@@ -40,9 +42,7 @@ fn decreasing(report: List(Int)) -> Bool {
 }
 
 fn parse_input(input: String) -> List(List(Int)) {
-  input
-  |> string.split("\n")
-  |> list.filter(fn(line) { line != "" })
+  parse.lines(input)
   |> list.map(fn(line) {
     line |> string.split(" ") |> list.filter_map(fn(str) { int.parse(str) })
   })
