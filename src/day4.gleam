@@ -41,19 +41,13 @@ const xmas = "XMAS"
 
 fn is_xmas(grid: parse.Grid, at: #(Int, Int), dir: Dir, index: Int) -> Bool {
   let letter = string.slice(xmas, index, 1)
-  case dict.get(grid, at) {
-    Ok(value) -> {
-      case value == letter {
-        True -> {
-          case index {
-            3 -> True
-            _ -> is_xmas(grid, next_cell(at, dir), dir, index + 1)
-          }
-        }
-        False -> False
+  case get_at(grid, at) == letter {
+    True ->
+      case index {
+        3 -> True
+        _ -> is_xmas(grid, next_cell(at, dir), dir, index + 1)
       }
-    }
-    Error(_) -> False
+    False -> False
   }
 }
 
