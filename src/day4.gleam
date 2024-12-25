@@ -13,6 +13,14 @@ pub fn part1(input: String) -> Int {
   |> int.sum
 }
 
+pub fn part2(input: String) -> Int {
+  let grid = parse.grid(input)
+
+  grid
+  |> dict.to_list
+  |> list.count(fn(kv) { is_cross_mas(grid, kv.0) })
+}
+
 type Dir {
   N
   NE
@@ -59,5 +67,28 @@ fn next_cell(from: #(Int, Int), dir: Dir) -> #(Int, Int) {
     SW -> #(from.0 - 1, from.1 + 1)
     W -> #(from.0 - 1, from.1)
     NW -> #(from.0 - 1, from.1 - 1)
+  }
+}
+
+fn is_cross_mas(grid: parse.Grid, at: #(Int, Int)) -> Bool {
+  case get_at(grid, at) {
+    "A" -> {
+      let ne = get_at(grid, next_cell(at, NE))
+      let se = get_at(grid, next_cell(at, SE))
+      let sw = get_at(grid, next_cell(at, SW))
+      let nw = get_at(grid, next_cell(at, NW))
+      let diag1 = sw <> ne
+      let diag2 = nw <> se
+
+      { diag1 == "MS" || diag1 == "SM" } && { diag2 == "MS" || diag2 == "SM" }
+    }
+    _ -> False
+  }
+}
+
+fn get_at(grid: parse.Grid, at: #(Int, Int)) -> String {
+  case dict.get(grid, at) {
+    Ok(value) -> value
+    Error(_) -> ""
   }
 }
