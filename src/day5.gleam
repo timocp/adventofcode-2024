@@ -8,13 +8,19 @@ pub fn part1(input: String) -> Int {
   let #(compare, updates) = parse_input(input)
 
   updates
-  |> list.filter(fn(pages) { is_sorted(pages, compare) })
+  |> list.filter(fn(pages) { pages == pages |> list.sort(compare) })
   |> list.map(middle_page)
   |> int.sum
 }
 
-fn is_sorted(pages: List(Int), compare: fn(Int, Int) -> order.Order) -> Bool {
-  pages == pages |> list.sort(compare)
+pub fn part2(input: String) -> Int {
+  let #(compare, updates) = parse_input(input)
+
+  updates
+  |> list.filter(fn(pages) { pages != pages |> list.sort(compare) })
+  |> list.map(fn(pages) { pages |> list.sort(compare) })
+  |> list.map(middle_page)
+  |> int.sum
 }
 
 fn middle_page(pages: List(Int)) -> Int {

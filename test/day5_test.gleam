@@ -40,3 +40,7 @@ const example1 = "47|53
 pub fn part1_test() {
   day5.part1(example1) |> should.equal(143)
 }
+
+pub fn part2_test() {
+  day5.part2(example1) |> should.equal(123)
+}
