@@ -27,6 +27,10 @@ pub fn get(grid: Grid(g), pos: Pos) -> g {
   }
 }
 
+pub fn insert(grid: Grid(g), pos: Pos, value: g) -> Grid(g) {
+  Grid(data: grid.data |> dict.insert(pos, value), default: grid.default)
+}
+
 pub type Dir {
   N
   NE
