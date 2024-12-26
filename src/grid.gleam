@@ -16,6 +16,10 @@ pub fn from_list(list: List(#(Pos, g)), default: g) -> Grid(g) {
   Grid(data: list |> dict.from_list, default: default)
 }
 
+pub fn to_list(grid: Grid(g)) -> List(#(Pos, g)) {
+  grid.data |> dict.to_list
+}
+
 pub fn checked_get(grid: Grid(g), pos: Pos) -> Result(g, Nil) {
   dict.get(grid.data, pos)
 }
@@ -41,6 +45,8 @@ pub type Dir {
   W
   NW
 }
+
+pub const all_directions = [N, NE, E, SE, S, SW, W, NW]
 
 pub fn right_90(dir: Dir) {
   case dir {
