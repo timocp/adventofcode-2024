@@ -1,14 +1,14 @@
+import argv
 import gleam/int
 import gleam/io
 import gleam/list
-
-import argv
 import simplifile
 
 import day1
 import day2
 import day3
 import day4
+import day5
 
 pub fn main() {
   case argv.load().arguments {
@@ -17,7 +17,7 @@ pub fn main() {
         Ok(n) -> run(n)
         Error(_) -> io.println("Invalid day: " <> arg)
       }
-    _ -> list.range(1, 4) |> list.each(fn(n) { run(n) })
+    _ -> list.range(1, 5) |> list.each(fn(n) { run(n) })
   }
 }
 
@@ -30,6 +30,7 @@ fn run(n: Int) -> Nil {
     2 -> day2.part1(input) |> int.to_string
     3 -> day3.part1(input) |> int.to_string
     4 -> day4.part1(input) |> int.to_string
+    5 -> day5.part1(input) |> int.to_string
     _ -> "(not implemented)"
   })
   io.print(output("Part 2: "))
