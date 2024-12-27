@@ -51,6 +51,7 @@ fn run(d: Int) -> Nil {
       5 -> day5.part2(input) |> int.to_string
       6 -> day6.part2(input) |> int.to_string
       7 -> day7.part2(input) |> int.to_string
+      8 -> day8.part2(input) |> int.to_string
       _ -> "(not implemented)"
     }
   })
