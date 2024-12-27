@@ -1,5 +1,4 @@
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/pair
 import gleam/result
@@ -7,9 +6,19 @@ import gleam/string
 import parse
 
 pub fn part1(input: String) -> Int {
+  solve(input, [Add, Multiply])
+}
+
+pub fn part2(input: String) -> Int {
+  solve(input, [Add, Multiply, Concatenate])
+}
+
+fn solve(input: String, operations: List(Op)) -> Int {
+  let valid = fn(e: #(Int, List(Op))) { is_valid(e, operations) }
+
   input
   |> parse_input
-  |> list.filter(is_valid)
+  |> list.filter(valid)
   |> list.map(pair.first)
   |> int.sum
 }
@@ -18,6 +27,7 @@ pub type Op {
   Number(Int)
   Add
   Multiply
+  Concatenate
 }
 
 fn evaluate(ops: List(Op)) -> Int {
@@ -28,58 +38,36 @@ fn forward_evaluate(ops: List(Op)) -> Int {
   case ops {
     [Number(a), Add, ..rest] -> a + forward_evaluate(rest)
     [Number(a), Multiply, ..rest] -> a * forward_evaluate(rest)
+    [Number(a), Concatenate, ..rest] -> {
+      a
+      |> int.digits(10)
+      |> result.unwrap([])
+      |> list.fold(forward_evaluate(rest), fn(acc, digit) { acc * 10 + digit })
+    }
     [Number(a)] -> a
     _ -> panic as { "Invalid expression" }
   }
 }
 
-fn is_valid(equation: #(Int, List(Op))) -> Bool {
-  let _debug_equation = fn(ops: List(Op)) {
-    io.println_error("")
-    io.println_error(
-      "checking if "
-      <> int.to_string(equation.0)
-      <> " == "
-      <> debug_ops(ops)
-      <> case evaluate(ops) == equation.0 {
-        True -> " (yes!)"
-        False -> " (no, " <> int.to_string(evaluate(ops)) <> ")"
-      },
-    )
-    ops
-  }
-
-  possible_ops(equation.1)
-  // |> list.map(debug_equation)
+fn is_valid(equation: #(Int, List(Op)), operations: List(Op)) -> Bool {
+  possible_ops(equation.1, operations)
   |> list.find(fn(ops) { evaluate(ops) == equation.0 })
   |> result.is_ok
 }
 
-fn possible_ops(ops: List(Op)) -> List(List(Op)) {
+fn possible_ops(ops: List(Op), operations: List(Op)) -> List(List(Op)) {
   case ops {
     [Number(a)] -> [[Number(a)]]
     [Number(a), ..rest] -> {
-      possible_ops(rest)
+      possible_ops(rest, operations)
       |> list.flat_map(fn(restops) {
-        [[Number(a), Add, ..restops], [Number(a), Multiply, ..restops]]
+        operations
+        |> list.map(fn(new_op) { [Number(a), new_op, ..restops] })
       })
     }
     [] -> []
-    [Add, ..] | [Multiply, ..] ->
-      panic as "possible_ops() requires numeric operands only"
+    _ -> panic as "possible_ops() requires numeric operands only"
   }
-}
-
-fn debug_ops(ops: List(Op)) -> String {
-  ops
-  |> list.map(fn(op) {
-    case op {
-      Number(a) -> int.to_string(a)
-      Add -> "+"
-      Multiply -> "*"
-    }
-  })
-  |> string.join(" ")
 }
 
 fn parse_input(input: String) -> List(#(Int, List(Op))) {
