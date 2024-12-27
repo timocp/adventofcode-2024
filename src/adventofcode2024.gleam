@@ -14,6 +14,7 @@ import day4
 import day5
 import day6
 import day7
+import day8
 
 pub fn main() {
   case argv.load().arguments {
@@ -22,7 +23,7 @@ pub fn main() {
         Ok(d) -> run(d)
         Error(_) -> io.println("Invalid day: " <> arg)
       }
-    _ -> list.range(1, 7) |> list.each(fn(d) { run(d) })
+    _ -> list.range(1, 8) |> list.each(fn(d) { run(d) })
   }
 }
 
@@ -37,6 +38,7 @@ fn run(d: Int) -> Nil {
       5 -> day5.part1(input) |> int.to_string
       6 -> day6.part1(input) |> int.to_string
       7 -> day7.part1(input) |> int.to_string
+      8 -> day8.part1(input) |> int.to_string
       _ -> "(not implemented)"
     }
   })
