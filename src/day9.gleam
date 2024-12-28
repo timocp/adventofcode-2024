@@ -1,4 +1,3 @@
-import gleam/deque.{type Deque}
 import gleam/int
 import gleam/list
 import gleam/pair
@@ -6,120 +5,22 @@ import gleam/string
 import vec.{type Vec}
 
 pub fn part1(input: String) -> Int {
-  parse_input(input)
-  |> defrag
-  |> checksum
+  to_storage(input)
+  |> split_files
+  |> fn(pair) {
+    let #(storage, file_id_map) = pair
+    storage
+    |> defrag
+    |> checksum_3(fn(file_id) { vec.must_get(file_id_map, file_id) })
+  }
 }
 
 pub fn part2(input: String) -> Int {
-  let storage = to_storage(input)
-  let max_id = { storage.file_loc |> vec.size } - 1
-
-  storage
-  |> defrag_2(max_id)
-  |> checksum_2
+  to_storage(input)
+  |> defrag
+  |> checksum_3(fn(file_id) { file_id })
 }
 
-type Block {
-  Empty
-  Filled(Int)
-}
-
-type Disk {
-  // defragged part is reversed list of ids, because we only need to operate on the back
-  Disk(defragged: List(Int), unsorted: Deque(Block))
-}
-
-fn defrag(disk: Disk) -> Disk {
-  case deque.is_empty(disk.unsorted) {
-    True -> disk
-    False -> disk |> move_block |> defrag
-  }
-}
-
-fn move_block(disk: Disk) -> Disk {
-  case deque.pop_front(disk.unsorted) {
-    Ok(#(Filled(f), rest1)) -> {
-      Disk(defragged: [f, ..disk.defragged], unsorted: rest1)
-    }
-    Ok(#(Empty, rest1)) -> {
-      case deque.pop_back(rest1) {
-        Ok(#(Empty, rest2)) -> {
-          Disk(
-            defragged: disk.defragged,
-            unsorted: rest2 |> deque.push_front(Empty),
-          )
-        }
-        Ok(#(Filled(b), rest2)) -> {
-          Disk(defragged: [b, ..disk.defragged], unsorted: rest2)
-        }
-        Error(_) -> {
-          Disk(defragged: disk.defragged, unsorted: rest1)
-        }
-      }
-    }
-    Error(_) -> panic as "tried to move empty unsorted"
-  }
-}
-
-fn checksum(disk: Disk) -> Int {
-  disk.defragged
-  |> list.reverse
-  |> list.index_map(fn(id, i) { id * i })
-  |> int.sum
-}
-
-fn debug_disk(disk: Disk) -> String {
-  string.concat([
-    disk.defragged
-      |> list.reverse
-      |> list.map(int.to_string)
-      |> string.join(""),
-    "|",
-    disk.unsorted
-      |> deque.to_list
-      |> list.map(debug_block)
-      |> string.join(""),
-  ])
-}
-
-// only makes sense for the example, the real one has ids > 9
-fn debug_block(block: Block) -> String {
-  case block {
-    Empty -> "."
-    Filled(id) -> int.to_string(id)
-  }
-}
-
-fn parse_input(input: String) -> Disk {
-  Disk(
-    defragged: [],
-    unsorted: input
-      |> string.trim_end
-      |> string.to_graphemes
-      |> list.index_map(fn(char, id) {
-        case char_to_int(char) {
-          a if a > 0 -> {
-            list.range(1, a)
-            |> list.map(fn(_) {
-              case id % 2 == 0 {
-                True -> Filled(id / 2)
-                False -> Empty
-              }
-            })
-          }
-          _ -> []
-        }
-      })
-      |> list.flatten
-      |> deque.from_list,
-  )
-}
-
-// Storage for part 2 which is very different
-// (If this works and is fast, could we reimplement part 1 using this, by
-// mapping each block to a 1-sized file in a way that allows us to retain the
-// IDs?)
 type Storage {
   Storage(
     // list of free locations #(loc, size)
@@ -165,26 +66,44 @@ fn to_storage(input: String) -> Storage {
   Storage(free_list: free_list, file_loc: file_loc, file_size: file_size)
 }
 
-fn defrag_2(storage: Storage, file_id: Int) -> Storage {
-  //io.println_error("")
-  //io.println_error("Current free list (loc,size):")
-  //io.debug(storage.free_list)
-  //io.println_error("Current file locations:")
-  //storage.file_loc
-  //|> vec.to_list
-  //|> list.index_map(fn(f, i) { #(f, i) })
-  //|> list.each(fn(x) {
-  //  let #(loc, file_id) = x
-  //  io.println_error(
-  //    "  file_id "
-  //    <> int.to_string(file_id)
-  //    //<> " size "
-  //    //<> int.to_string(storage.file_size |> vec.must_get(file_id))
-  //    <> " is at "
-  //    <> int.to_string(loc),
-  //  )
-  //})
+// So that part 1 can be done using part 2's algorithm:
+// Map each multi-block file into single-block files, eg:
+// ..111..  -> ..123..
+// Free list is unchanged
+//
+// Return a Vec that is a map from the temporary file_id back to the original
+// so that checksum can be calculated
+fn split_files(storage: Storage) -> #(Storage, Vec(Int)) {
+  // list of single-block replacement files
+  // #(new_location, original_file_id)
+  let new_file_locations =
+    storage.file_loc
+    |> vec.to_list
+    |> list.index_map(fn(original_location, original_file_id) {
+      let size = storage.file_size |> vec.must_get(original_file_id)
+      list.range(0, size - 1)
+      |> list.map(fn(offset) { #(original_location + offset, original_file_id) })
+    })
+    |> list.flatten
 
+  #(
+    Storage(
+      free_list: storage.free_list,
+      file_loc: new_file_locations
+        |> list.map(fn(new_file) { new_file.0 })
+        |> vec.from_list,
+      file_size: new_file_locations |> list.map(fn(_) { 1 }) |> vec.from_list,
+    ),
+    new_file_locations |> list.map(fn(new_file) { new_file.1 }) |> vec.from_list,
+  )
+}
+
+fn defrag(storage: Storage) -> Storage {
+  let max_id = { storage.file_loc |> vec.size } - 1
+  defrag_file(storage, max_id)
+}
+
+fn defrag_file(storage: Storage, file_id: Int) -> Storage {
   case file_id {
     -1 -> storage
     _ -> {
@@ -193,18 +112,7 @@ fn defrag_2(storage: Storage, file_id: Int) -> Storage {
 
       case find_space(storage, current_loc, file_size) {
         Ok(#(free_loc, _free_size)) -> {
-          //io.debug(#(
-          //  "moving file_id",
-          //  file_id,
-          //  "size",
-          //  file_size,
-          //  "from",
-          //  current_loc,
-          //  "to",
-          //  free_loc,
-          //))
-
-          defrag_2(
+          defrag_file(
             Storage(
               // this is the hard bit
               free_list: storage.free_list
@@ -235,15 +143,14 @@ fn defrag_2(storage: Storage, file_id: Int) -> Storage {
           )
         }
         Error(_) -> {
-          //io.debug(#("nowhere to move file_id", file_id, "size", file_size))
-          defrag_2(storage, file_id - 1)
+          defrag_file(storage, file_id - 1)
         }
       }
     }
   }
 }
 
-// give a file size, return the #(loc, size) entry from the free list which best matches it.
+// given a file size, return the #(loc, size) entry from the free list which best matches it.
 // Returns Error if no space is available to our left
 fn find_space(
   storage: Storage,
@@ -254,14 +161,16 @@ fn find_space(
   |> list.find(fn(entry) { entry.1 >= file_size && entry.0 < file_loc })
 }
 
-fn checksum_2(storage: Storage) -> Int {
+// The callback maps the file_id back to an original. This is used by part 1
+// which renumbers files when they are split into single blocks.
+fn checksum_3(storage: Storage, file_id_map_fn: fn(Int) -> Int) {
   list.range(0, { storage.file_loc |> vec.size } - 1)
   |> list.map(fn(file_id) {
     let loc = storage.file_loc |> vec.must_get(file_id)
     let size = storage.file_size |> vec.must_get(file_id)
 
     list.range(loc, loc + size - 1)
-    |> list.map(fn(pos) { pos * file_id })
+    |> list.map(fn(pos) { pos * file_id_map_fn(file_id) })
     |> int.sum
   })
   |> int.sum
